@@ -85,7 +85,8 @@ test_gen_eval() {
     ${pip_ext} install httpx==0.23.0
 
     # run inference
-    ${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/infer4eval.py \
+    #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/infer4eval.py \
+    ${python_ext} /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/infer4eval.py \
     --cfg ${cfg} \
     --tau ${tau} \
     --pn ${pn} \
