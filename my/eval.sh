@@ -114,7 +114,7 @@ test_gen_eval() {
     ${python_ext} /root/zjm/Infinity/evaluation/gen_eval/evaluate_images.py ${out_dir}/images\
     --outfile ${out_dir}/results/det.jsonl \
     --model-config /root/zjm/Infinity/evaluation/gen_eval/mask2former/mask2former_swin-s-p4-w7-224_lsj_8x2_50e_coco.py \
-    --model-path /root/zjm/model
+    --model-path /root/autodl-tmp/model
 
     # accumulate results
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/summary_scores.py ${out_dir}/results/det.jsonl > ${out_dir}/results/res.txt
@@ -131,10 +131,10 @@ model_type=infinity_2b
 use_scale_schedule_embedding=0
 use_bit_label=1
 checkpoint_type='torch'
-infinity_model_path=/root/zjm/model/infinity_2b_reg.pth
+infinity_model_path=/root/autodl-tmp/model/infinity_2b_reg.pth
 out_dir_root=/root/zjm/Infinity/out
 vae_type=32
-vae_path=/root/zjm/model/infinity_vae_d32reg.pth
+vae_path=/root/autodl-tmp/model/infinity_vae_d32reg.pth
 cfg=4
 tau=1
 rope2d_normalized_by_hw=2
