@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export HF_HOME=/home/wangkai/wdtang/hr_infinity/huggingface
+#export HF_HOME=/home/wangkai/wdtang/hr_infinity/huggingface
 export HF_TOKEN="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"
 
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=0
 
 infer_eval_image_reward() {
     ${pip_ext} install image-reward pytorch_lightning
@@ -76,17 +76,17 @@ infer_eval_hpsv21() {
 }
 
 test_gen_eval() {
-    #${pip_ext} install -U openmim
-    #mim install mmengine mmcv-full==1.7.2
-    #${pip_ext} install mmdet==2.28.2 pytorch_lightning clip_benchmark open-clip-torch==2.20.0
-    #${pip_ext} install -U diffusers
-    #sudo apt install libgl1
-    #${pip_ext} install openai==1.34.0
-    #${pip_ext} install httpx==0.23.0
+    ${pip_ext} install -U openmim
+    mim install mmengine mmcv-full==1.7.2
+    ${pip_ext} install mmdet==2.28.2 pytorch_lightning clip_benchmark open-clip-torch==2.20.0
+    ${pip_ext} install -U diffusers
+    sudo apt install libgl1
+    ${pip_ext} install openai==1.34.0
+    ${pip_ext} install httpx==0.23.0
 
     # run inference
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/infer4eval.py \
-    ${python_ext} /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/infer4eval.py \
+    ${python_ext} /root/zjm/Infinity/evaluation/gen_eval/infer4eval.py \
     --cfg ${cfg} \
     --tau ${tau} \
     --pn ${pn} \
@@ -111,14 +111,14 @@ test_gen_eval() {
 
     # detect objects
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/evaluate_images.py ${out_dir}/images \
-    ${python_ext} /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/evaluate_images.py ${out_dir}/images\
+    ${python_ext} /root/zjm/Infinity/evaluation/gen_eval/evaluate_images.py ${out_dir}/images\
     --outfile ${out_dir}/results/det.jsonl \
     --model-config /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/mask2former/mask2former_swin-s-p4-w7-224_lsj_8x2_50e_coco.py \
     --model-path /home/wangkai/wdtang/hr_infinity/weight
 
     # accumulate results
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/summary_scores.py ${out_dir}/results/det.jsonl > ${out_dir}/results/res.txt
-    ${python_ext} /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/summary_scores.py ${out_dir}/results/det.jsonl > ${out_dir}/results/res.txt
+    ${python_ext} /root/zjm/Infinity/evaluation/gen_eval/summary_scores.py ${out_dir}/results/det.jsonl > ${out_dir}/results/res.txt
     cat ${out_dir}/results/res.txt
 }
 
@@ -131,16 +131,16 @@ model_type=infinity_2b
 use_scale_schedule_embedding=0
 use_bit_label=1
 checkpoint_type='torch'
-infinity_model_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_2b_reg.pth
-out_dir_root=/home/wangkai/jmzhang/Infinity/out/output01
+infinity_model_path=/root/zjm/model/infinity_2b_reg.pth
+out_dir_root=/root/zjm/Infinity/out
 vae_type=32
-vae_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_vae_d32reg.pth
+vae_path=/root/zjm/model/infinity_vae_d32reg.pth
 cfg=4
 tau=1
 rope2d_normalized_by_hw=2
 add_lvl_embeding_only_first_block=1
 rope2d_each_sa_layer=1
-text_encoder_ckpt=/home/wangkai/wdtang/hr_infinity/weight/flan-t5-xl
+text_encoder_ckpt=/root/.cache/huggingface/hub/models--google--flan-t5-xl
 text_channels=2048
 apply_spatial_patchify=0
 cfg_insertion_layer=0
