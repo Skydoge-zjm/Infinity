@@ -76,13 +76,13 @@ infer_eval_hpsv21() {
 }
 
 test_gen_eval() {
-    ${pip_ext} install -U openmim
-    mim install mmengine mmcv-full==1.7.2
-    ${pip_ext} install mmdet==2.28.2 pytorch_lightning clip_benchmark open-clip-torch==2.20.0
-    ${pip_ext} install -U diffusers
-    sudo apt install libgl1
-    ${pip_ext} install openai==1.34.0
-    ${pip_ext} install httpx==0.23.0
+    #${pip_ext} install -U openmim
+    #mim install mmengine mmcv-full==1.7.2
+    #${pip_ext} install mmdet==2.28.2 pytorch_lightning clip_benchmark open-clip-torch==2.20.0
+    #${pip_ext} install -U diffusers
+    #sudo apt install libgl1
+    #${pip_ext} install openai==1.34.0
+    #${pip_ext} install httpx==0.23.0
 
     # run inference
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/infer4eval.py \
@@ -113,8 +113,8 @@ test_gen_eval() {
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/evaluate_images.py ${out_dir}/images \
     ${python_ext} /root/zjm/Infinity/evaluation/gen_eval/evaluate_images.py ${out_dir}/images\
     --outfile ${out_dir}/results/det.jsonl \
-    --model-config /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/mask2former/mask2former_swin-s-p4-w7-224_lsj_8x2_50e_coco.py \
-    --model-path /home/wangkai/wdtang/hr_infinity/weight
+    --model-config /root/zjm/Infinity/evaluation/gen_eval/mask2former/mask2former_swin-s-p4-w7-224_lsj_8x2_50e_coco.py \
+    --model-path /root/zjm/model
 
     # accumulate results
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/summary_scores.py ${out_dir}/results/det.jsonl > ${out_dir}/results/res.txt
