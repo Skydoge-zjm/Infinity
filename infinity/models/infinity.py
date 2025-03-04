@@ -573,13 +573,74 @@ class Infinity(nn.Module):
             else:
                 logits_BlV = self.get_logits(last_stage[:B], cond_BD[:B]).mul(1/tau_list[si])
             
-            if self.use_bit_label:
-                tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
-                logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
-                idx_Bld = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
-                idx_Bld = idx_Bld.reshape(tmp_bs, tmp_seq_len, -1)
+
+
+            if si == 3:
+                if self.use_bit_label:
+                    tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
+                    logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
+                    
+                    num_samples = 3000
+                    idx_Bld_list_else = [
+                        sample_with_top_k_top_p_also_inplace_modifying_logits_(
+                            logits_BlV, 
+                            rng=rng,
+                            top_k=top_k or self.top_k,
+                            top_p=top_p or self.top_p,
+                            num_samples=1
+                        )[:, :, 0]  
+                        for _ in range(num_samples)
+                    ]
+                 
+                    output_list = []
+                    for i in idx_Bld_list_else:
+                        output = i.reshape(tmp_bs, tmp_seq_len, -1)
+                        output_list.append(output)
+
+                    output_tensor = torch.stack(output_list) # b n hw c
+                    x = output_tensor.permute(1, 2, 0, 3)
+                    batch_size, hw, n, c = x.shape
+                    device = x.device
+
+                    total_scores = torch.zeros(batch_size,n, device=device)
+
+    
+                    for i in range(hw):
+                        x_i = x[:, i, :, :].float()
+                        dist_sq = torch.cdist(x_i, x_i, p=2) ** 2  
+                        h = (n * (c + 2) / 4.) ** (-1. / (c + 4)) * torch.std(x_i, dim=1, unbiased=False)
+                        bandwidth = h.mean() 
+                        kde = torch.exp(-dist_sq / (2 * bandwidth ** 2))
+                        scores_i = kde.sum(dim=-1)  
+                        total_scores += scores_i
+
+                    _, sorted_indices = total_scores.sort(dim=1, descending=True)  # [batch_size, n]
+                    k = 100
+                    top_k_indices = sorted_indices[:, :k]
+                    probs = torch.linspace(k, 1, steps=k).float()      
+                    probs = probs / probs.sum()    
+                    selected_index = torch.multinomial(probs, 1)
+                    idxx = top_k_indices[:, selected_index]
+                    idx_Bld = output_tensor[idxx].squeeze()
+
+
+                else:
+                    idx_Bl = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
+                #print(f"scale:{si} rng_else: {rng_else}  ")
             else:
-                idx_Bl = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
+                if self.use_bit_label:
+                    tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
+                    logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
+
+                    idx_Bld = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
+                    idx_Bld = idx_Bld.reshape(tmp_bs, tmp_seq_len, -1)
+                    #print(idx_Bld.shape)
+                    #print(f"scale:{si} rng: {rng}  ")
+                else:
+                    idx_Bl = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
+            
+            
+
             if vae_type != 0:
                 assert returns_vemb
                 if si < gt_leak:

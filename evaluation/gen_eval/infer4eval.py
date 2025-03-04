@@ -15,7 +15,7 @@ import torch
 import numpy as np
 from pytorch_lightning import seed_everything
 
-from infinity.utils.csv_util import load_csv_as_dicts, write_dicts2csv_file
+#from infinity.utils.csv_util import load_csv_as_dicts, write_dicts2csv_file
 from tools.run_infinity import *
 from conf import HF_TOKEN, HF_HOME
 
@@ -138,3 +138,5 @@ if __name__ == '__main__':
     
         with open(prompt_rewrite_cache_file, 'w') as f:
             json.dump(prompt_rewrite_cache, f, indent=2)
+
+    print(f"infer4eval.py finish")
