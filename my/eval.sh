@@ -76,13 +76,13 @@ infer_eval_hpsv21() {
 }
 
 test_gen_eval() {
-    #${pip_ext} install -U openmim
-    #mim install mmengine mmcv-full==1.7.2
-    #${pip_ext} install mmdet==2.28.2 pytorch_lightning clip_benchmark open-clip-torch==2.20.0
-    #${pip_ext} install -U diffusers
-    #sudo apt install libgl1
-    #${pip_ext} install openai==1.34.0
-    #${pip_ext} install httpx==0.23.0
+    ${pip_ext} install -U openmim
+    mim install mmengine mmcv-full==1.7.2
+    ${pip_ext} install mmdet==2.28.2 pytorch_lightning clip_benchmark open-clip-torch==2.20.0
+    ${pip_ext} install -U diffusers
+    sudo apt install libgl1
+    ${pip_ext} install openai==1.34.0
+    ${pip_ext} install httpx==0.23.0
 
     # run inference
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/infer4eval.py \
