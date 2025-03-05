@@ -580,7 +580,7 @@ class Infinity(nn.Module):
                     tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
                     logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
                     
-                    num_samples = 3000
+                    num_samples = 100
                     idx_Bld_list_else = [
                         sample_with_top_k_top_p_also_inplace_modifying_logits_(
                             logits_BlV, 
@@ -615,7 +615,7 @@ class Infinity(nn.Module):
                         total_scores += scores_i
 
                     _, sorted_indices = total_scores.sort(dim=1, descending=True)  # [batch_size, n]
-                    k = 100
+                    k = 10
                     top_k_indices = sorted_indices[:, :k]
                     probs = torch.linspace(k, 1, steps=k).float()      
                     probs = probs / probs.sum()    
