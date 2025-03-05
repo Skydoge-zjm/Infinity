@@ -580,7 +580,7 @@ class Infinity(nn.Module):
                     tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
                     logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
                     
-                    num_samples = 3000
+                    num_samples = 1000
                     idx_Bld_list_else = [
                         sample_with_top_k_top_p_also_inplace_modifying_logits_(
                             logits_BlV,
