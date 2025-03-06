@@ -111,7 +111,6 @@ test_gen_eval() {
 
     # detect objects
     ${python_ext} /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/evaluate_images.py ${out_dir}/images \
-    #${python_ext} /root/zjm/Infinity/evaluation/gen_eval/evaluate_images.py ${out_dir}/images\
     --outfile ${out_dir}/results/det.jsonl \
     --model-config /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/mask2former/mask2former_swin-s-p4-w7-224_lsj_8x2_50e_coco.py \
     --model-path /home/wangkai/wdtang/hr_infinity/weight
