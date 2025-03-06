@@ -580,7 +580,7 @@ class Infinity(nn.Module):
                     tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
                     logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
                     
-                    num_samples = 3000
+                    num_samples = 500
                     idx_Bld_list_else = [
                         sample_with_top_k_top_p_also_inplace_modifying_logits_(
                             logits_BlV,
@@ -615,149 +615,13 @@ class Infinity(nn.Module):
                         total_scores += scores_i
 
                     _, sorted_indices = total_scores.sort(dim=1, descending=True)  # [batch_size, n]
-
-
-                    selected_samples = []
-                    global_selected_flatten = []  # 存储所有已选样本的特征向量
-                    num_selected = 10  # 每个batch内预选10个候选样本
-
-                    density_threshold = 1.5# 可调节的密度阈值参数
-
-                    for b in range(batch_size):
-                        # 获取当前batch的得分数据
-                        batch_scores = total_scores[b]
-
-                        # 判断是否存在高密度点
-                        max_score = batch_scores.max()
-                        mean_score = batch_scores.mean()
-
-                        # 密度判断条件（可根据需求调整）
-                        if max_score < density_threshold * mean_score:
-                            # 随机选择路径 --------------------------------------------------------
-                            # 生成随机排列的索引
-                            perm_indices = torch.randperm(n, device=device)
-
-                            # 寻找第一个不冲突的样本
-                            chosen_idx = None
-                            for idx in perm_indices:
-                                candidate = x[b, :, idx, :].view(-1)
-
-                                # 全局冲突检查
-                                conflict = any(torch.norm(candidate - gs) < 1.8 for gs in global_selected_flatten)
-
-                                if not conflict:
-                                    chosen_idx = idx
-                                    break
-
-                            # 如果全部冲突则选择第一个样本
-                            if chosen_idx is None:
-                                chosen_idx = 0
-
-                            # 记录选择的样本
-                            chosen_sample = x[b, :, chosen_idx, :]
-                            selected_samples.append(chosen_sample.unsqueeze(0))
-                            global_selected_flatten.append(chosen_sample.view(-1).detach().clone())
-                            continue
-                        selected = []
-                        selected_indices_b = []
-                        remaining_indices = sorted_indices[b].tolist()
-
-                        for idx in remaining_indices:
-                            if len(selected) >= num_selected:
-                                break
-                            current_sample = x[b, :, idx, :]  # [hw, c]
-                            current_flatten = current_sample.view(-1)
-
-                            # 检查与全局已选样本的相似性
-                            is_dissimilar = True
-                            '''# 全局检查
-                            for gs in global_selected_flatten:
-                                if torch.norm(current_flatten - gs, p=2) < 1.8:
-                                    is_dissimilar = False
-                                    break
-                            if not is_dissimilar:
-                                continue
-                            
-                            # 检查当前batch内已选样本
-                            for samp in selected:
-                                samp_flatten = samp.view(-1)
-                                if torch.norm(current_flatten - samp_flatten, p=2) < 1.8:
-                                    is_dissimilar = False
-                                    break'''
-                            if is_dissimilar:
-                                selected.append(current_sample)
-                                selected_indices_b.append(idx)
-
-                        # 处理无候选样本的情况
-                        if not selected_indices_b:
-                            # 寻找与全局不冲突的样本
-                            fallback_idx = None
-                            for idx in remaining_indices:
-                                current_sample = x[b, :, idx, :]
-                                current_flatten = current_sample.view(-1)
-                                conflict = False
-                                for gs in global_selected_flatten:
-                                    if torch.norm(current_flatten - gs, p=2) < 1.8:
-                                        conflict = True
-                                        break
-                                if not conflict:
-                                    fallback_idx = idx
-                                    break
-                            if fallback_idx is None:
-                                fallback_idx = remaining_indices[0]
-                            selected = [x[b, :, fallback_idx, :]]
-                            selected_indices_b = [fallback_idx]
-
-                        # 概率分配逻辑保持不变
-                        selected_scores = total_scores[b][selected_indices_b]
-
-                        k = len(selected)
-                        if k == 10:
-                            probs = [0.22, 0.18, 0.15, 0.12, 0.1, 0.08, 0.07, 0.05, 0.03, 0.02]
-                        elif k == 9:
-                            probs = [0.25, 0.22, 0.15, 0.1, 0.08, 0.07, 0.06, 0.04, 0.03]
-                        elif k == 8:
-                            probs = [0.3, 0.25, 0.15, 0.1, 0.08, 0.05, 0.04, 0.03]
-                        elif k == 7:
-                            probs = [0.35, 0.25, 0.15, 0.13, 0.05, 0.04, 0.03]
-                        elif k == 6:
-                            probs = [0.4, 0.25, 0.15, 0.1, 0.05, 0.05]
-                        elif k == 5:
-                            probs = [0.5, 0.2, 0.1, 0.1, 0.1]
-                        elif k == 4:
-                            probs = [0.4, 0.3, 0.2, 0.1]
-                        elif k == 3:
-                            probs = [0.5, 0.3, 0.2]
-                        elif k == 2:
-                            probs = [0.7, 0.3]
-                        elif k == 1:
-                            probs = [1.0]
-                        else:
-                            probs = torch.linspace(k, 1, steps=k).float()
-
-                        probs = torch.tensor(probs, device=device)
-                        probs = probs / probs.sum()
-
-                        _, order = selected_scores.sort(descending=True)
-                        chosen_idx = torch.multinomial(probs[order], 1).item()
-                        chosen_sample = selected[order[chosen_idx]]
-
-                        # 更新全局已选样本列表
-                        chosen_flatten = chosen_sample.view(-1).detach().clone()
-                        global_selected_flatten.append(chosen_flatten)
-
-                        selected_samples.append(chosen_sample.unsqueeze(0))
-
-                    idx_Bld = torch.cat(selected_samples, dim=0).squeeze()
-
-
-                    '''k = 100
+                    k = 10
                     top_k_indices = sorted_indices[:, :k]
-                    probs = torch.linspace(k, 1, steps=k).float()      
-                    probs = probs / probs.sum()    
+                    probs = torch.linspace(k, 1, steps=k).float()
+                    probs = probs / probs.sum()
                     selected_index = torch.multinomial(probs, 1)
                     idxx = top_k_indices[:, selected_index]
-                    idx_Bld = output_tensor[idxx].squeeze()'''
+                    idx_Bld = output_tensor[idxx].squeeze()
 
 
                 else:
