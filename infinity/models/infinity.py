@@ -580,7 +580,7 @@ class Infinity(nn.Module):
                     tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
                     logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
                     
-                    num_samples = 1000
+                    num_samples = 500
                     idx_Bld_list_else = [
                         sample_with_top_k_top_p_also_inplace_modifying_logits_(
                             logits_BlV,
@@ -748,7 +748,7 @@ class Infinity(nn.Module):
 
                         selected_samples.append(chosen_sample.unsqueeze(0))
 
-                    h_BChw = torch.cat(selected_samples, dim=0).squeeze()
+                    idx_Bld = torch.cat(selected_samples, dim=0).squeeze()
 
 
                     '''k = 100
