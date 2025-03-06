@@ -3,7 +3,7 @@
 #export HF_HOME=/home/wangkai/wdtang/hr_infinity/huggingface
 export HF_TOKEN="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"
 
-export CUDA_VISIBLE_DEVICES=1,2,3
+export CUDA_VISIBLE_DEVICES=2
 
 infer_eval_image_reward() {
     ${pip_ext} install image-reward pytorch_lightning
@@ -131,7 +131,7 @@ use_scale_schedule_embedding=0
 use_bit_label=1
 checkpoint_type='torch_shard'
 infinity_model_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_8b_weights
-out_dir_root=/home/wangkai/jmzhang/Infinity/out_new/out_8b
+out_dir_root=/home/wangkai/jmzhang/Infinity/out_new/out_41
 vae_type=14
 vae_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_vae_d56_f8_14_patchify.pth
 cfg=3
