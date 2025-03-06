@@ -3,7 +3,7 @@
 #export HF_HOME=/home/wangkai/wdtang/hr_infinity/huggingface
 export HF_TOKEN="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"
 
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=1
 
 infer_eval_image_reward() {
     ${pip_ext} install image-reward pytorch_lightning
