@@ -3,7 +3,7 @@
 #export HF_HOME=/home/wangkai/wdtang/hr_infinity/huggingface
 export HF_TOKEN="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"
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1,2,3
 
 infer_eval_image_reward() {
     ${pip_ext} install image-reward pytorch_lightning
@@ -126,14 +126,14 @@ pip_ext=pip3
 
 # set arguments for inference
 pn=1M
-model_type=infinity_2b
+model_type=infinity_8b
 use_scale_schedule_embedding=0
 use_bit_label=1
-checkpoint_type='torch'
-infinity_model_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_2b_reg.pth
-out_dir_root=/home/wangkai/jmzhang/Infinity/out_new/out_original
-vae_type=32
-vae_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_vae_d32reg.pth
+checkpoint_type='torch_shard'
+infinity_model_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_8b_weights
+out_dir_root=/home/wangkai/jmzhang/Infinity/out_new/out_8b
+vae_type=14
+vae_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_vae_d56_f8_14_patchify.pth
 cfg=3
 tau=1
 rope2d_normalized_by_hw=2
@@ -141,7 +141,7 @@ add_lvl_embeding_only_first_block=1
 rope2d_each_sa_layer=1
 text_encoder_ckpt=/home/wangkai/wdtang/hr_infinity/weight/flan-t5-xl
 text_channels=2048
-apply_spatial_patchify=0
+apply_spatial_patchify=1
 cfg_insertion_layer=0
 sub_fix=cfg${cfg}_tau${tau}_cfg_insertion_layer${cfg_insertion_layer}
 
