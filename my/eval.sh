@@ -86,32 +86,31 @@ test_gen_eval() {
 
     # run inference
     #${python_ext} /home/wangkai/wdtang/hr_infinity/text0/Infinity-main/evaluation/gen_eval/infer4eval.py \
-    ${python_ext} /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/infer4eval.py \
-    --cfg ${cfg} \
-    --tau ${tau} \
-    --pn ${pn} \
-    --model_path ${infinity_model_path} \
-    --vae_type ${vae_type} \
-    --vae_path ${vae_path} \
-    --add_lvl_embeding_only_first_block ${add_lvl_embeding_only_first_block} \
-    --use_bit_label ${use_bit_label} \
-    --model_type ${model_type} \
-    --rope2d_each_sa_layer ${rope2d_each_sa_layer} \
-    --rope2d_normalized_by_hw ${rope2d_normalized_by_hw} \
-    --use_scale_schedule_embedding ${use_scale_schedule_embedding} \
-    --cfg ${cfg} \
-    --tau ${tau} \
-    --checkpoint_type ${checkpoint_type} \
-    --text_encoder_ckpt ${text_encoder_ckpt} \
-    --text_channels ${text_channels} \
-    --apply_spatial_patchify ${apply_spatial_patchify} \
-    --cfg_insertion_layer ${cfg_insertion_layer} \
-    --outdir ${out_dir}/images \
-    --rewrite_prompt ${rewrite_prompt}
+    #${python_ext} /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/infer4eval.py \
+    #--cfg ${cfg} \
+    #--tau ${tau} \
+    #--pn ${pn} \
+    #--model_path ${infinity_model_path} \
+    #--vae_type ${vae_type} \
+    #--vae_path ${vae_path} \
+    #--add_lvl_embeding_only_first_block ${add_lvl_embeding_only_first_block} \
+    #--use_bit_label ${use_bit_label} \
+    #--model_type ${model_type} \
+    #--rope2d_each_sa_layer ${rope2d_each_sa_layer} \
+    #--rope2d_normalized_by_hw ${rope2d_normalized_by_hw} \
+    #--use_scale_schedule_embedding ${use_scale_schedule_embedding} \
+    #v--cfg ${cfg} \
+    #--tau ${tau} \
+    #--checkpoint_type ${checkpoint_type} \
+    #--text_encoder_ckpt ${text_encoder_ckpt} \
+    #--text_channels ${text_channels} \
+    #--apply_spatial_patchify ${apply_spatial_patchify} \
+    #--cfg_insertion_layer ${cfg_insertion_layer} \
+    #--outdir ${out_dir}/images \
+    #--rewrite_prompt ${rewrite_prompt}
 
     # detect objects
     ${python_ext} /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/evaluate_images.py ${out_dir}/images \
-    #${python_ext} /root/zjm/Infinity/evaluation/gen_eval/evaluate_images.py ${out_dir}/images\
     --outfile ${out_dir}/results/det.jsonl \
     --model-config /home/wangkai/jmzhang/Infinity/evaluation/gen_eval/mask2former/mask2former_swin-s-p4-w7-224_lsj_8x2_50e_coco.py \
     --model-path /home/wangkai/wdtang/hr_infinity/weight
