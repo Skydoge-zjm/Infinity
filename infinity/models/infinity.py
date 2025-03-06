@@ -573,74 +573,13 @@ class Infinity(nn.Module):
             else:
                 logits_BlV = self.get_logits(last_stage[:B], cond_BD[:B]).mul(1/tau_list[si])
             
-
-
-            if si == 3:
-                if self.use_bit_label:
-                    tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
-                    logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
-                    
-                    num_samples = 500
-                    idx_Bld_list_else = [
-                        sample_with_top_k_top_p_also_inplace_modifying_logits_(
-                            logits_BlV,
-                            rng=rng,
-                            top_k=top_k or self.top_k,
-                            top_p=top_p or self.top_p,
-                            num_samples=1
-                        )[:, :, 0]
-                        for _ in range(num_samples)
-                    ]
-
-                    output_list = []
-                    for i in idx_Bld_list_else:
-                        output = i.reshape(tmp_bs, tmp_seq_len, -1)
-                        output_list.append(output)
-
-                    output_tensor = torch.stack(output_list) # b n hw c
-                    x = output_tensor.permute(1, 2, 0, 3)
-                    batch_size, hw, n, c = x.shape
-                    device = x.device
-
-                    total_scores = torch.zeros(batch_size,n, device=device)
-
-
-                    for i in range(hw):
-                        x_i = x[:, i, :, :].float()
-                        dist_sq = torch.cdist(x_i, x_i, p=2) ** 2
-                        h = (n * (c + 2) / 4.) ** (-1. / (c + 4)) * torch.std(x_i, dim=1, unbiased=False)
-                        bandwidth = h.mean()
-                        kde = torch.exp(-dist_sq / (2 * bandwidth ** 2))
-                        scores_i = kde.sum(dim=-1)
-                        total_scores += scores_i
-
-                    _, sorted_indices = total_scores.sort(dim=1, descending=True)  # [batch_size, n]
-                    k = 10
-                    top_k_indices = sorted_indices[:, :k]
-                    probs = torch.linspace(k, 1, steps=k).float()
-                    probs = probs / probs.sum()
-                    selected_index = torch.multinomial(probs, 1)
-                    idxx = top_k_indices[:, selected_index]
-                    idx_Bld = output_tensor[idxx].squeeze()
-
-
-                else:
-                    idx_Bl = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
-                #print(f"scale:{si} rng_else: {rng_else}  ")
+            if self.use_bit_label:
+                tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
+                logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
+                idx_Bld = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
+                idx_Bld = idx_Bld.reshape(tmp_bs, tmp_seq_len, -1)
             else:
-                if self.use_bit_label:
-                    tmp_bs, tmp_seq_len = logits_BlV.shape[:2]
-                    logits_BlV = logits_BlV.reshape(tmp_bs, -1, 2)
-
-                    idx_Bld = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
-                    idx_Bld = idx_Bld.reshape(tmp_bs, tmp_seq_len, -1)
-                    #print(idx_Bld.shape)
-                    #print(f"scale:{si} rng: {rng}  ")
-                else:
-                    idx_Bl = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
-            
-            
-
+                idx_Bl = sample_with_top_k_top_p_also_inplace_modifying_logits_(logits_BlV, rng=rng, top_k=top_k or self.top_k, top_p=top_p or self.top_p, num_samples=1)[:, :, 0]
             if vae_type != 0:
                 assert returns_vemb
                 if si < gt_leak:
@@ -677,7 +616,7 @@ class Infinity(nn.Module):
                 idx_Bl_list.append(idx_Bl)
                 if si != num_stages_minus_1:
                     accu_BChw, last_stage = self.quant_only_used_in_inference[0].one_step_fuse(si, num_stages_minus_1+1, accu_BChw, h_BChw, scale_schedule)
-            
+
             if si != num_stages_minus_1:
                 last_stage = self.word_embed(self.norm0_ve(last_stage))
                 last_stage = last_stage.repeat(bs//B, 1, 1)
@@ -692,7 +631,7 @@ class Infinity(nn.Module):
 
         if not ret_img:
             return ret, idx_Bl_list, []
-        
+
         if vae_type != 0:
             img = vae.decode(summed_codes.squeeze(-3))
         else:
@@ -701,11 +640,11 @@ class Infinity(nn.Module):
         img = (img + 1) / 2
         img = img.permute(0, 2, 3, 1).mul_(255).to(torch.uint8).flip(dims=(3,))
         return ret, idx_Bl_list, img
-    
+
     @for_visualize
     def vis_key_params(self, ep):
         return
-    
+
     def load_state_dict(self, state_dict: Dict[str, Any], strict=False, assign=False):
         for k in state_dict:
             if 'cfg_uncond' in k:
@@ -715,14 +654,14 @@ class Infinity(nn.Module):
                     state_dict[k] = torch.cat((old.to(device=new.device, dtype=new.dtype), new[min_tlen:]))
                 else:
                     state_dict[k] = old[:min_tlen]
-        
+
         for buf_name in ('lvl_1L', 'attn_bias_for_masking', 'Infinity_visible_kvlen', 'Infinity_invisible_qlen'):
             state_dict.pop(buf_name, None)
             if hasattr(self, buf_name):
                 state_dict[buf_name] = getattr(self, buf_name)
-        
+
         return super().load_state_dict(state_dict=state_dict, strict=strict, assign=assign)
-    
+
     def special_init(
         self,
         aln_init: float,
@@ -735,7 +674,7 @@ class Infinity(nn.Module):
             self.head_nm.ada_lin[-1].weight.data.mul_(aln_init)    # there's no gamma for head
             if hasattr(self.head_nm.ada_lin[-1], 'bias') and self.head_nm.ada_lin[-1].bias is not None:
                 self.head_nm.ada_lin[-1].bias.data.zero_()
-        
+
         # init head's proj
         if scale_head >= 0:
             if isinstance(self.head, nn.Linear):
@@ -744,7 +683,7 @@ class Infinity(nn.Module):
             elif isinstance(self.head, nn.Sequential):
                 self.head[-1].weight.data.mul_(scale_head)
                 self.head[-1].bias.data.zero_()
-        
+
         depth = len(self.unregistered_blocks)
         for block_idx, sab in enumerate(self.unregistered_blocks):
             sab: Union[SelfAttnBlock, CrossAttnBlock]
@@ -760,7 +699,7 @@ class Infinity(nn.Module):
             # if sab.using_swiglu:
             #     nn.init.ones_(sab.ffn.fcg.bias)
             #     nn.init.trunc_normal_(sab.ffn.fcg.weight, std=1e-5)
-            
+
             # init ada_lin
             if hasattr(sab, 'ada_lin'):
                 lin = sab.ada_lin[-1]
@@ -771,10 +710,10 @@ class Infinity(nn.Module):
             elif hasattr(sab, 'ada_gss'):
                 sab.ada_gss.data[:, :, :2, :].mul_(aln_gamma_init)  # init gamma
                 sab.ada_gss.data[:, :, 2:, :].mul_(aln_init)        # init scale and shift
-    
+
     def extra_repr(self):
         return f'drop_path_rate={self.drop_path_rate}'
-    
+
     def get_layer_id_and_scale_exp(self, para_name: str):
         raise NotImplementedError
 
@@ -819,7 +758,7 @@ def get_params_num(d, w, mlp):
     s += w**2 * 6       # saln
     s += 4096 * w       # pred
     s += 32 * w         # we
-    
+
     Ct5 = 4096
     s += Ct5*w * 4      # T5 attn pool
     s += Ct5*w + w*w    # T5 mlp
@@ -836,20 +775,20 @@ def infinity_20b(depth=58, embed_dim=4608, num_heads=4608//128, drop_path_rate=0
 
 # model configuration for scaling Infinity transformer
 @register_model
-def infinity_layer12(depth=12, embed_dim=768, num_heads=8, drop_path_rate=0.1, **kwargs): 
+def infinity_layer12(depth=12, embed_dim=768, num_heads=8, drop_path_rate=0.1, **kwargs):
     return Infinity(depth=depth, embed_dim=embed_dim, num_heads=num_heads, mlp_ratio=4, drop_path_rate=drop_path_rate, **{k: v for k, v in kwargs.items() if k not in TIMM_KEYS})
 @register_model
-def infinity_layer16(depth=16, embed_dim=1152, num_heads=12, drop_path_rate=0.1, **kwargs): 
+def infinity_layer16(depth=16, embed_dim=1152, num_heads=12, drop_path_rate=0.1, **kwargs):
     return Infinity(depth=depth, embed_dim=embed_dim, num_heads=num_heads, mlp_ratio=4, drop_path_rate=drop_path_rate, **{k: v for k, v in kwargs.items() if k not in TIMM_KEYS})
 @register_model
-def infinity_layer24(depth=24, embed_dim=1536, num_heads=16, drop_path_rate=0.1, **kwargs): 
+def infinity_layer24(depth=24, embed_dim=1536, num_heads=16, drop_path_rate=0.1, **kwargs):
     return Infinity(depth=depth, embed_dim=embed_dim, num_heads=num_heads, mlp_ratio=4, drop_path_rate=drop_path_rate, **{k: v for k, v in kwargs.items() if k not in TIMM_KEYS})
 @register_model
-def infinity_layer32(depth=32, embed_dim=2080, num_heads=20, drop_path_rate=0.1, **kwargs): 
+def infinity_layer32(depth=32, embed_dim=2080, num_heads=20, drop_path_rate=0.1, **kwargs):
     return Infinity(depth=depth, embed_dim=embed_dim, num_heads=num_heads, mlp_ratio=4, drop_path_rate=drop_path_rate, **{k: v for k, v in kwargs.items() if k not in TIMM_KEYS})
 @register_model
-def infinity_layer40(depth=40, embed_dim=2688, num_heads=24, drop_path_rate=0.1, **kwargs): 
+def infinity_layer40(depth=40, embed_dim=2688, num_heads=24, drop_path_rate=0.1, **kwargs):
     return Infinity(depth=depth, embed_dim=embed_dim, num_heads=num_heads, mlp_ratio=4, drop_path_rate=drop_path_rate, **{k: v for k, v in kwargs.items() if k not in TIMM_KEYS})
 @register_model
-def infinity_layer48(depth=48, embed_dim=3360, num_heads=28, drop_path_rate=0.1, **kwargs): 
+def infinity_layer48(depth=48, embed_dim=3360, num_heads=28, drop_path_rate=0.1, **kwargs):
     return Infinity(depth=depth, embed_dim=embed_dim, num_heads=num_heads, mlp_ratio=4, drop_path_rate=drop_path_rate, **{k: v for k, v in kwargs.items() if k not in TIMM_KEYS})
