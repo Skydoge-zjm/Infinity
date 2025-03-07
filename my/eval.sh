@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#export HF_HOME=/home/wangkai/wdtang/hr_infinity/huggingface
+export HF_HOME=/home/wangkai/wdtang/hr_infinity/huggingface
 export HF_TOKEN="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"
 
 export CUDA_VISIBLE_DEVICES=0
@@ -129,7 +129,7 @@ use_scale_schedule_embedding=0
 use_bit_label=1
 checkpoint_type='torch'
 infinity_model_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_2b_reg.pth
-out_dir_root=/home/jmzhang/Infinity/out_new/out_51
+out_dir_root=/home/wangkai/jmzhang/Infinity/out_new/out_51
 vae_type=32
 vae_path=/home/wangkai/wdtang/hr_infinity/weight/infinity_vae_d32reg.pth
 cfg=3.5
